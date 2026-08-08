@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flat Rate Quote Builder</title>
+<style>
+  :root{
+    --orange:#f5820a;
+    --orange-dark:#c9640a;
+    --yellow:#ffc93c;
+    --yellow-light:#fff4d6;
+    --ink:#241c14;
+    --ink-soft:#5a4c3c;
+    --paper:#fffaf0;
+    --card:#ffffff;
+    --line:#eadfc8;
+    --good:#3a7d44;
+    --shadow: 0 2px 10px rgba(60,40,10,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#fff8ea 0%, #fdf1dc 100%);
+    color:var(--ink);
+  }
+  header{
+    background:linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    box-shadow:0 3px 12px rgba(180,90,0,0.25);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  header .plane{
+    width:44px;height:44px;flex:none;
+  }
+  header h1{
+    font-size:22px;
+    margin:0;
+    letter-spacing:0.3px;
+  }
+  header p{
+    margin:2px 0 0;
+    font-size:13px;
+    color:#fff0d9;
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:24px 20px 60px;
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:22px;
+  }
+  @media (max-width: 900px){
+    .wrap{grid-template-columns:1fr;}
+  }
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .tab-btn{
+    flex:1;
+    padding:12px 16px;
+    border:2px solid var(--orange);
+    background:#fff;
+    color:var(--orange-dark);
+    font-weight:700;
+    font-size:14.5px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .tab-btn.active{
+    background:linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color:#fff;
+    box-shadow:var(--shadow);
+  }
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--orange-dark);
+    margin:0 0 14px;
+    padding-bottom:8px;
+    border-bottom:2px solid var(--yellow-light);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .card h2 .badge{
+    background:var(--yellow);
+    color:#5c4200;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:20px;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .options-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:10px;
+  }
+  .opt{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    background:var(--paper);
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    cursor:pointer;
+    font-size:14px;
+    transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--orange);}
+  .opt.checked{
+    border-color:var(--orange);
+    background:var(--yellow-light);
+  }
+  .opt input{accent-color:var(--orange-dark); width:16px; height:16px; flex:none;}
+  .opt .hrs{
+    margin-left:auto;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .opt .hr-group{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    flex:none;
+  }
+  .opt select.hr-select{
+    font-size:12.5px;
+    color:var(--ink);
+    font-weight:600;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    padding:3px 5px;
+    background:#fff;
+    cursor:pointer;
+    font-variant-numeric:tabular-nums;
+  }
+  .opt select.hr-select:hover{border-color:var(--orange);}
+  .opt .hr-unit{
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .note{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.5;
+  }
+  .fixed-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--yellow-light);
+    border:1.5px dashed var(--yellow);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    margin-top:4px;
+  }
+  .fixed-line span.tag{
+    font-size:11px;
+    color:#8a6a00;
+    font-weight:700;
+    margin-left:8px;
+  }
+
+  /* Sidebar summary */
+  .summary{
+    position:sticky;
+    top:100px;
+    align-self:start;
+  }
+  .summary .card{margin-bottom:14px;}
+  .rate-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .rate-row label{font-size:13.5px; font-weight:600; color:var(--ink-soft);}
+  .rate-row input[type=number], .rate-row input[type=text]{
+    width:110px;
+    padding:7px 8px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-size:14px;
+    text-align:right;
+  }
+  .field-row{margin-bottom:10px;}
+  .field-row label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:4px;}
+  .field-row input{
+    width:100%;
+    padding:8px 9px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+  }
+  .totals-line{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    padding:7px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .totals-line.grand{
+    border-bottom:none;
+    border-top:2px solid var(--orange);
+    margin-top:6px;
+    padding-top:10px;
+    font-size:19px;
+    font-weight:800;
+    color:var(--orange-dark);
+  }
+  .totals-line .l{color:var(--ink-soft);}
+  .totals-line .v{font-variant-numeric:tabular-nums; font-weight:600;}
+  .days-pill{
+    display:inline-block;
+    background:var(--good);
+    color:#fff;
+    font-size:12px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-top:6px;
+  }
+  .print-btn{
+    width:100%;
+    margin-top:12px;
+    padding:12px;
+    border:none;
+    border-radius:9px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color:#fff;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .print-btn:hover{filter:brightness(1.05);}
+  .reset-btn{
+    width:100%;
+    margin-top:8px;
+    padding:9px;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    background:#fff;
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  /* Component R&R quote list */
+  .comp-row{
+    display:grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap:12px;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .comp-row:last-child{border-bottom:none;}
+  .comp-row select, .comp-row input[type=number]{
+    padding:7px 8px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+  }
+  .comp-row .comp-hr-group{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    background:var(--yellow-light);
+    border:1.5px solid var(--yellow);
+    border-radius:7px;
+    padding:4px 8px;
+  }
+  .comp-row .comp-hr-group select{
+    width:56px;
+    border:1.5px solid var(--line);
+    padding:4px 5px;
+    font-weight:600;
+  }
+  .comp-row .comp-hr-group .hr-unit{
+    font-size:12px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .add-btn{
+    background:var(--orange-dark);
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    padding:8px 14px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--orange);}
+  .qtable{width:100%; border-collapse:collapse; margin-top:6px;}
+  .qtable th{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--ink-soft);
+    border-bottom:2px solid var(--yellow-light);
+    padding:6px 6px;
+  }
+  .qtable td{
+    padding:8px 6px;
+    font-size:13.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .qtable td.num{text-align:right; font-variant-numeric:tabular-nums;}
+  .rm-btn{
+    background:none;
+    border:none;
+    color:#b23b2e;
+    font-weight:700;
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+  }
+  .empty-msg{
+    font-size:13px;
+    color:var(--ink-soft);
+    padding:14px 4px;
+    text-align:center;
+  }
+  .subtle{font-size:12px; color:var(--ink-soft);}
+
+  /* ---- Inspection Checklist panel (FAA Part 43, Appendix D) ---- */
+  .checklist-block{border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:14px;}
+  .checklist-header{background:#1F3864; color:#fff; font-weight:800; font-size:13.5px; padding:9px 14px; letter-spacing:0.2px;}
+  .checklist-item{display:flex; align-items:flex-start; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); background:#fff; transition:background .15s;}
+  .checklist-block .checklist-item:last-child{border-bottom:none;}
+  .checklist-item.single{border:1px solid var(--line); border-radius:10px; margin-bottom:14px;}
+  .checklist-item .num{font-weight:700; color:var(--orange-dark); min-width:26px; font-size:13px;}
+  .checklist-item .txt{flex:1; font-size:13px; line-height:1.55; color:var(--ink);}
+  .checklist-item .insp{display:flex; align-items:center; gap:6px; flex:none; cursor:pointer; user-select:none;}
+  .checklist-item .insp input[type=radio]{accent-color:var(--good); width:17px; height:17px; cursor:pointer; margin:0;}
+  .checklist-item .insp span{font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.3px;}
+  .checklist-item.inspected{background:#eaf6ec;}
+  .checklist-item.inspected .insp span{color:var(--good);}
+  .checklist-progress{margin-bottom:14px;}
+  .checklist-progress-bar{background:var(--paper); border:1.5px solid var(--line); border-radius:20px; height:14px; overflow:hidden;}
+  .checklist-progress-fill{height:100%; width:0%; background:linear-gradient(135deg, var(--good), #2f6636); border-radius:20px; transition:width .2s;}
+  .checklist-progress-label{font-size:12.5px; color:var(--ink-soft); margin-top:6px; font-weight:600;}
+  .text-update-btn{
+    width:100%;
+    margin-top:8px;
+    padding:12px;
+    border:none;
+    border-radius:9px;
+    background:linear-gradient(135deg, var(--good), #2f6636);
+    color:#fff;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .text-update-btn:hover{filter:brightness(1.05);}
+
+  /* ---- Print quote (navy & gold, matches the shop's "annual quote form" reference) ---- */
+  #print-quote{display:none;}
+  #print-quote .pq-header{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:3px solid #B8860B; padding-bottom:14px; margin-bottom:18px;
+  }
+  #print-quote .pq-shop-name{font-size:26px; font-weight:800; color:#1F3864; margin:0;}
+  #print-quote .pq-shop-tagline{font-size:12.5px; color:#555; margin:4px 0 0;}
+  #print-quote .pq-shop-contact{font-size:12.5px; color:#555; text-align:right; line-height:1.6;}
+  #print-quote .pq-title-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px;}
+  #print-quote .pq-title{font-size:22px; font-weight:800; color:#1F3864; margin:0;}
+  #print-quote .pq-subtitle{font-size:13px; color:#555; margin:2px 0 0;}
+  #print-quote .pq-quote-meta{font-size:12.5px; text-align:right; color:#222; line-height:1.6;}
+  #print-quote .pq-quote-meta b{color:#1F3864;}
+  #print-quote .pq-section{font-size:16px; font-weight:800; color:#1F3864; border-bottom:2px solid #B8860B; padding-bottom:5px; margin:22px 0 10px;}
+  #print-quote .pq-note{font-size:12.5px; color:#555; margin:0 0 10px; line-height:1.5;}
+  #print-quote table{width:100%; border-collapse:collapse; margin-bottom:14px; font-size:12.5px; page-break-inside:auto;}
+  #print-quote table tr{page-break-inside:avoid;}
+  #print-quote table th{background:#1F3864; color:#fff; text-align:left; padding:7px 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.3px;}
+  #print-quote table td{padding:7px 8px; border-bottom:1px solid #DEE6F2; vertical-align:top;}
+  #print-quote table.pq-striped tr:nth-child(even) td{background:#DEE6F2;}
+  #print-quote table.pq-info-table td.pq-label{background:#1F3864; color:#fff; font-weight:700; width:16%;}
+  #print-quote table.pq-info-table td:not(.pq-label){width:34%;}
+  #print-quote table.pq-rate-table td:nth-child(3), #print-quote table.pq-rate-table td:nth-child(4), #print-quote table.pq-rate-table td:nth-child(5){text-align:right;}
+  #print-quote table.pq-comp-table td:nth-child(2), #print-quote table.pq-comp-table td:nth-child(3){text-align:right;}
+  #print-quote table.pq-summary-table td{border-bottom:1px solid #DEE6F2;}
+  #print-quote table.pq-summary-table tr:nth-child(even) td{background:#DEE6F2;}
+  #print-quote table.pq-summary-table td:last-child{text-align:right;}
+  #print-quote table.pq-summary-table td.pq-total{background:#1F3864; color:#fff; font-weight:800; font-size:14px; border-bottom:none;}
+  #print-quote table.pq-schedule-table td.pq-label{background:#1F3864; color:#fff; font-weight:700; width:20%;}
+  #print-quote .pq-terms{list-style:none; padding:0; margin:0 0 6px; font-size:12.5px; color:#555;}
+  #print-quote .pq-terms li{margin-bottom:6px; padding-left:16px; position:relative; line-height:1.5;}
+  #print-quote .pq-terms li:before{content:"\2022"; color:#B8860B; position:absolute; left:0; font-weight:800;}
+  #print-quote .pq-footer{border-top:2px solid #B8860B; margin-top:16px; padding-top:10px; text-align:center; font-size:12px; font-style:italic; color:#555;}
+
+  @page{ margin:0.6in; }
+  @media print{
+    body *{visibility:hidden;}
+    #print-quote, #print-quote *{visibility:visible;}
+    #print-quote{display:block; position:absolute; left:0; top:0; width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="plane" viewBox="0 0 24 24" fill="#fff"><path d="M22 16v-2l-8.5-5V3.5C13.5 2.67 12.83 2 12 2s-1.5.67-1.5 1.5V9L2 14v2l8.5-2.5V19L8 20.5V22l4-1 4 1v-1.5L13.5 19v-5.5L22 16z"/></svg>
+  <div>
+    <h1>Flat Rate Quote Builder</h1>
+    <p>Annual inspection &amp; component R&amp;R pricing for general aviation aircraft</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="annual">Annual Inspection</button>
+      <button class="tab-btn" data-tab="component">Component R&amp;R</button>
+      <button class="tab-btn" data-tab="checklist">Inspection Checklist</button>
+    </div>
+
+    <!-- ============ ANNUAL INSPECTION PANEL ============ -->
+    <div class="panel active" id="panel-annual">
+
+      <div class="card">
+        <h2>Propeller</h2>
+        <div class="options-grid" id="grp-prop-blades"></div>
+        <div class="options-grid" style="margin-top:10px;" id="grp-const-speed"></div>
+        <p class="note">One hour per blade. Constant-speed prop adds inspection time.</p>
+      </div>
+
+      <div class="card">
+        <h2>Engine <span class="badge">select cylinder count</span></h2>
+        <div class="options-grid" id="grp-engine"></div>
+        <div class="options-grid" style="margin-top:10px;" id="grp-twin"></div>
+        <p class="note">Twin-engine aircraft add a second engine's worth of cylinder inspection time.</p>
+      </div>
+
+      <div class="card">
+        <h2>Landing Gear</h2>
+        <div class="options-grid" id="grp-gear"></div>
+      </div>
+
+      <div class="card">
+        <h2>Wings &amp; Fuselage</h2>
+        <div class="options-grid" id="grp-wings"></div>
+        <div class="options-grid" style="margin-top:10px;" id="grp-fuselage"></div>
+      </div>
+
+      <div class="card">
+        <h2>Equipped Systems <span class="badge">check what's installed</span></h2>
+        <div class="options-grid" id="grp-equip"></div>
+        <p class="note">These items are always inspected on schedule as part of the annual; checking a box only adds the labor hours billed for aircraft actually equipped with it.</p>
+      </div>
+
+      <div class="card">
+        <h2>Included In Every Annual</h2>
+        <div class="fixed-line"><div>AD Research <span class="tag">ALWAYS INCLUDED</span></div><div>8.0 hrs</div></div>
+        <div class="fixed-line" style="margin-top:8px;"><div>Aircraft Wash <span class="tag">ALWAYS INCLUDED</span></div><div>1.0 hr</div></div>
+        <p class="note">
+          * Does not include discrepancies found during the inspection.<br>
+          * Does not include STCs with ICAs.<br>
+          * Warranty annual coverage: 30 hours or 90 days, whichever occurs first, based on RCM risk curve.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ COMPONENT R&R PANEL ============ -->
+    <div class="panel" id="panel-component">
+
+      <div class="card">
+        <h2>Propeller Assembly R&amp;R</h2>
+        <div class="comp-row">
+          <select id="c-prop-type">
+            <option value="2">Propeller Assembly — 2.0 hrs</option>
+            <option value="2.5">Prop Assembly w/ Constant Speed — 2.5 hrs</option>
+          </select>
+          <span></span><span></span>
+          <span class="comp-hr-group"><select id="c-prop-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addComponent('c-prop-type', function(v){return {label: v==2?'Propeller Assembly':'Prop Assembly w/ Constant Speed', hours: parseFloat(v)};}, 'c-prop-hrs')">+ Add to Quote</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cylinder R&amp;R</h2>
+        <div class="comp-row">
+          <select id="c-cyl-type">
+            <option value="6,9">No Fuel Injection</option>
+            <option value="8,12">With Fuel Injection</option>
+            <option value="16,24">With Turbo</option>
+          </select>
+          <select id="c-cyl-qty">
+            <option value="1">1 cylinder</option>
+            <option value="2">2 cylinders</option>
+          </select>
+          <input type="number" id="c-cyl-extra" min="0" step="1" value="0" title="Additional cylinders beyond 2" style="width:90px;">
+          <span class="comp-hr-group"><select id="c-cyl-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addCylinder()">+ Add to Quote</button>
+        </div>
+        <p class="note">Extra field suggests a default via the shop note ("add 1/2 time for each additional cylinder") — the hr dropdown is the final billed quantity and can be overridden before adding.</p>
+      </div>
+
+      <div class="card">
+        <h2>Engine R&amp;R</h2>
+        <div class="comp-row">
+          <select id="c-engine-type">
+            <option value="16">4-Cylinder, No Fuel Injection — 16 hrs</option>
+            <option value="18">4-Cylinder, w/ Fuel Injection — 18 hrs</option>
+            <option value="24">6-Cylinder, w/ Fuel Injection — 24 hrs</option>
+            <option value="32">6-Cylinder, w/ Fuel Injection &amp; Turbo — 32 hrs</option>
+          </select>
+          <span></span><span></span>
+          <span class="comp-hr-group"><select id="c-engine-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addComponent('c-engine-type', function(v){var m={16:'4-Cyl Engine R&R (No FI)',18:'4-Cyl Engine R&R (FI)',24:'6-Cyl Engine R&R (FI)',32:'6-Cyl Engine R&R (FI + Turbo)'}; return {label:m[v], hours:parseFloat(v)};}, 'c-engine-hrs')">+ Add to Quote</button>
+        </div>
+        <p class="note">Hours dropdown goes up to 25 to cover larger engine R&amp;R jobs.</p>
+      </div>
+
+      <div class="card">
+        <h2>Other Components</h2>
+        <div class="comp-row">
+          <select id="c-alt-type">
+            <option value="3.5">Alternator R&R — Belt Driven</option>
+            <option value="3">Alternator R&R — Gear Driven</option>
+          </select>
+          <span></span><span></span>
+          <span class="comp-hr-group"><select id="c-alt-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addComponent('c-alt-type', function(v){return {label: v=='3.5'?'Alternator R&R (Belt Driven)':'Alternator R&R (Gear Driven)', hours: parseFloat(v)};}, 'c-alt-hrs')">+ Add to Quote</button>
+        </div>
+        <div class="comp-row">
+          <div style="font-size:14px;">Oil Cooler R&amp;R</div>
+          <span></span><span></span>
+          <span class="comp-hr-group"><select id="c-oil-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addFixed('Oil Cooler R&R', 'c-oil-hrs')">+ Add to Quote</button>
+        </div>
+        <div class="comp-row">
+          <div style="font-size:14px;">Engine Mount R&amp;R</div>
+          <span></span><span></span>
+          <span class="comp-hr-group"><select id="c-mount-hrs"></select><span class="hr-unit">hr</span></span>
+          <button class="add-btn" onclick="addFixed('Engine Mount R&R', 'c-mount-hrs')">+ Add to Quote</button>
+        </div>
+        <p class="note">Engine Mount R&amp;R hours dropdown goes up to 25.</p>
+      </div>
+
+      <div class="card">
+        <h2>Component Quote Items</h2>
+        <table class="qtable" id="comp-table">
+          <thead><tr><th>Item</th><th style="text-align:right">Hours</th><th style="text-align:right">Est. $</th><th></th></tr></thead>
+          <tbody id="comp-tbody"></tbody>
+        </table>
+        <div id="comp-empty" class="empty-msg">No components added yet.</div>
+        <p class="note">* Warranty work: 30 hours or 90 days, whichever occurs first, based on RCM risk curve.</p>
+      </div>
+    </div>
+
+    <!-- ============ INSPECTION CHECKLIST PANEL ============ -->
+    <div class="panel" id="panel-checklist">
+      <div class="card">
+        <h2>Inspection Checklist <span class="badge">14 CFR Part 43, Appendix D</span></h2>
+        <p class="note">Scope and detail of items to be included in annual and 100-hour inspections (as applicable to the particular aircraft). Click "Inspected" to mark an item complete; click again to clear it.</p>
+        <div class="checklist-progress">
+          <div class="checklist-progress-bar"><div class="checklist-progress-fill" id="checklist-progress-fill"></div></div>
+          <div class="checklist-progress-label" id="checklist-progress-label">0 of 0 inspected (0%)</div>
+        </div>
+        <div id="checklist-list"></div>
+        <button class="reset-btn" onclick="resetChecklist()">Reset Checklist</button>
+        <button class="text-update-btn" onclick="sendCustomerUpdate()">Text Update to Customer Phone</button>
+        <p class="note">Opens your device's messaging app pre-addressed to the Customer Phone number (Customer &amp; Aircraft panel) with the current progress filled in — you review and tap Send.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SIDEBAR SUMMARY ============ -->
+  <div class="summary">
+    <div class="card">
+      <h2>Shop Information</h2>
+      <div class="field-row"><label>Shop Name</label><input type="text" id="f-shop-name" placeholder="Ken's Aircraft Maintenance, LLC"></div>
+      <div class="field-row"><label>Address</label><input type="text" id="f-shop-address" placeholder="123 Airport Rd, Springfield, IL"></div>
+      <div class="field-row"><label>Phone</label><input type="text" id="f-shop-phone" placeholder="(555) 123-4567"></div>
+      <div class="field-row"><label>Email</label><input type="text" id="f-shop-email" placeholder="shop@example.com"></div>
+      <div class="field-row"><label>Prepared By (A&amp;P/IA)</label><input type="text" id="f-prepared-by" placeholder="Name, A&P/IA"></div>
+    </div>
+
+    <div class="card">
+      <h2>Customer &amp; Aircraft</h2>
+      <div class="field-row"><label>Customer Name</label><input type="text" id="f-customer" placeholder="Jane Pilot"></div>
+      <div class="field-row"><label>Customer Address</label><input type="text" id="f-customer-address" placeholder="456 Hangar Ln, Springfield, IL"></div>
+      <div class="field-row"><label>Customer Phone</label><input type="text" id="f-customer-phone" placeholder="(555) 987-6543"></div>
+      <div class="field-row"><label>Customer Email</label><input type="text" id="f-customer-email" placeholder="jane@example.com"></div>
+      <div class="field-row"><label>Make / Model</label><input type="text" id="f-model" placeholder="Cirrus SR22"></div>
+      <div class="field-row"><label>Registration (Tail Number)</label><input type="text" id="f-tail" placeholder="N12345"></div>
+      <div class="field-row"><label>Serial Number</label><input type="text" id="f-serial" placeholder="1234"></div>
+      <div class="field-row"><label>Total Time (hrs)</label><input type="text" id="f-total-time" placeholder="2,150.4"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quote Info</h2>
+      <div class="field-row"><label>Quote No.</label><input type="text" id="f-quote-no" placeholder="0001"></div>
+      <div class="field-row"><label>Scheduled Start Date</label><input type="text" id="f-scheduled-start" placeholder="TBD upon acceptance"></div>
+    </div>
+
+    <div class="card">
+      <h2>Rate &amp; Totals</h2>
+      <div class="rate-row">
+        <label>Shop Labor Rate</label>
+        <input type="number" id="f-rate" value="95" min="0" step="1">
+      </div>
+      <div class="rate-row">
+        <label>Parts / Materials $</label>
+        <input type="number" id="f-parts" value="0" min="0" step="1">
+      </div>
+
+      <div class="totals-line"><span class="l">Annual Inspection Hours</span><span class="v" id="t-annual-hrs">0.00</span></div>
+      <div class="totals-line"><span class="l">Component R&amp;R Hours</span><span class="v" id="t-comp-hrs">0.00</span></div>
+      <div class="totals-line"><span class="l">Total Labor Hours</span><span class="v" id="t-total-hrs">0.00</span></div>
+      <div class="totals-line"><span class="l">Labor Subtotal</span><span class="v" id="t-labor">$0.00</span></div>
+      <div class="totals-line"><span class="l">Parts / Materials</span><span class="v" id="t-parts">$0.00</span></div>
+      <div class="totals-line grand"><span class="l">Total Quote</span><span class="v" id="t-grand">$0.00</span></div>
+
+      <div>
+        <span class="days-pill" id="t-days">Est. 0.0 shop days</span>
+      </div>
+
+      <button class="print-btn" onclick="downloadQuoteDocx()">Download Quote (.docx)</button>
+      <button class="print-btn" style="background:linear-gradient(135deg, var(--yellow), var(--orange));" onclick="printQuote()">Print / Save Quote (PDF)</button>
+      <button class="reset-btn" onclick="resetAll()">Reset All Selections</button>
+    </div>
+  </div>
+</div>
+
+<div id="print-quote"></div>
+
+<script>
+/* ---------------- Data model (mirrors Flat Rate Quote Schedule.xlsx) ---------------- */
+
+// Each group: array of {id, label, hours, days(optional override), default(bool)}
+// "conditional" groups: hours AND days only counted when selected
+// "equip" group: hours counted only when selected, days ALWAYS counted (per spreadsheet formulas)
+
+const propBlades = [
+  {id:'b2', label:'Two Blades', hours:2},
+  {id:'b3', label:'Three Blades', hours:3},
+  {id:'b4', label:'Four Blades', hours:4},
+];
+const constSpeed = [
+  {id:'cs', label:'Constant-Speed Propeller', hours:1}
+];
+const engineCyl = [
+  {id:'e4', label:'Four Cylinder', hours:4},
+  {id:'e6', label:'Six Cylinder', hours:6},
+];
+const twin = [
+  {id:'tw', label:'Twin Engine (adds 2nd engine)', hours:null} // hours computed dynamically = selected engine hours
+];
+const gear = [
+  {id:'gf', label:'Fixed Gear', hours:3},
+  {id:'gr', label:'Retractable Gear', hours:6},
+];
+const wings = [
+  {id:'wh', label:'High Wing', hours:2},
+  {id:'wl', label:'Low Wing', hours:4},
+];
+const fuselage = [
+  {id:'fh', label:'High Wing Fuselage', hours:2},
+  {id:'fl', label:'Low Wing Fuselage', hours:4},
+];
+// equipped systems: hours conditional, days ALWAYS added (matches spreadsheet H33/H36/H38/O33/O36/O38 being unconditional)
+const equip = [
+  {id:'emp', label:'Empennage Equipment', hours:1, days:0.5},
+  {id:'oxy', label:'Oxygen System', hours:1, days:0.25},
+  {id:'ams', label:'AMSAFE Airbag Seatbelts', hours:1, days:0.25},
+  {id:'tks', label:'TKS Known-Icing System', hours:1, days:0.25},
+  {id:'tail', label:'Tail Section Equipment', hours:1, days:0.5},
+  {id:'ap', label:'Autopilot', hours:1, days:0.25},
+];
+
+// Builds the starting hour-override map from each group's default "hours" value.
+// Every editable item (all except the dynamic Twin Engine entry) gets a 1-9 dropdown
+// so the mechanic can adjust the billed hour quantity per item.
+function defaultHourOverrides(){
+  const map = {};
+  [...propBlades, ...constSpeed, ...engineCyl, ...gear, ...wings, ...fuselage, ...equip].forEach(it=>{
+    if(it.hours!=null) map[it.id] = it.hours;
+  });
+  return map;
+}
+
+const state = {
+  propBlade: 'b3',
+  constSpeed: false,
+  engine: 'e6',
+  twin: true,
+  gear: 'gf',
+  wing: 'wl',
+  fuselage: 'fl',
+  equip: {emp:true, oxy:true, ams:false, tks:false, tail:true, ap:true},
+  hourOverrides: defaultHourOverrides(),
+};
+
+const componentItems = []; // {label, hours}
+
+/* ---------------- Inspection Checklist (FAA 14 CFR Part 43, Appendix D) ---------------- */
+
+const inspectionChecklist = [
+  {section:'a', single:true, text:'(a) Preparation. Before inspection, remove or open all necessary inspection plates, access doors, fairing, and cowling. Thoroughly clean the aircraft and aircraft engine.'},
+  {section:'b', title:'(b) Fuselage and Hull Group — inspect (where applicable):', items:[
+    {num:1, text:'Fabric and skin — for deterioration, distortion, other evidence of failure, and defective or insecure attachment of fittings.'},
+    {num:2, text:'Systems and components — for improper installation, apparent defects, and unsatisfactory operation.'},
+    {num:3, text:'Envelope, gas bags, ballast tanks, and related parts — for poor condition.'},
+  ]},
+  {section:'c', title:'(c) Cabin and Cockpit Group — inspect (where applicable):', items:[
+    {num:1, text:'Generally — for uncleanliness and loose equipment that might foul the controls.'},
+    {num:2, text:'Seats and safety belts — for poor condition and apparent defects.'},
+    {num:3, text:'Windows and windshields — for deterioration and breakage.'},
+    {num:4, text:'Instruments — for poor condition, mounting, marking, and (where practicable) improper operation.'},
+    {num:5, text:'Flight and engine controls — for improper installation and improper operation.'},
+    {num:6, text:'Batteries — for improper installation and improper charge.'},
+    {num:7, text:'All systems — for improper installation, poor general condition, apparent and obvious defects, and insecurity of attachment.'},
+  ]},
+  {section:'d', title:'(d) Engine and Nacelle Group — inspect (where applicable):', items:[
+    {num:1, text:'Engine section — for visual evidence of excessive oil, fuel, or hydraulic leaks, and sources of such leaks.'},
+    {num:2, text:'Studs and nuts — for improper torquing and obvious defects.'},
+    {num:3, text:'Internal engine — for cylinder compression and for metal particles or foreign matter on screens and sump drain plugs. If there is weak cylinder compression, for improper internal condition and improper internal tolerances.'},
+    {num:4, text:'Engine mount — for cracks, looseness of mounting, and looseness of engine to mount.'},
+    {num:5, text:'Flexible vibration dampeners — for poor condition and deterioration.'},
+    {num:6, text:'Engine controls — for defects, improper travel, and improper safetying.'},
+    {num:7, text:'Lines, hoses, and clamps — for leaks, improper condition and looseness.'},
+    {num:8, text:'Exhaust stacks — for cracks, defects, and improper attachment.'},
+    {num:9, text:'Accessories — for apparent defects in security of mounting.'},
+    {num:10, text:'All systems — for improper installation, poor general condition, defects, and insecure attachment.'},
+    {num:11, text:'Cowling — for cracks, and defects.'},
+  ]},
+  {section:'e', title:'(e) Landing Gear Group — inspect (where applicable):', items:[
+    {num:1, text:'All units — for poor condition and insecurity of attachment.'},
+    {num:2, text:'Shock absorbing devices — for improper oleo fluid level.'},
+    {num:3, text:'Linkages, trusses, and members — for undue or excessive wear fatigue, and distortion.'},
+    {num:4, text:'Retracting and locking mechanism — for improper operation.'},
+    {num:5, text:'Hydraulic lines — for leakage.'},
+    {num:6, text:'Electrical system — for chafing and improper operation of switches.'},
+    {num:7, text:'Wheels — for cracks, defects, and condition of bearings.'},
+    {num:8, text:'Tires — for wear and cuts.'},
+    {num:9, text:'Brakes — for improper adjustment.'},
+    {num:10, text:'Floats and skis — for insecure attachment and obvious or apparent defects.'},
+  ]},
+  {section:'f', single:true, text:'(f) Wing and Center Section Assembly — inspect (where applicable) all components for poor general condition, fabric or skin deterioration, distortion, evidence of failure, and insecurity of attachment.'},
+  {section:'g', single:true, text:'(g) Empennage Assembly — inspect (where applicable) all components and systems for poor general condition, fabric or skin deterioration, distortion, evidence of failure, insecure attachment, improper component installation, and improper component operation.'},
+  {section:'h', title:'(h) Propeller Group — inspect (where applicable):', items:[
+    {num:1, text:'Propeller assembly — for cracks, nicks, binds, and oil leakage.'},
+    {num:2, text:'Bolts — for improper torquing and lack of safetying.'},
+    {num:3, text:'Anti-icing devices — for improper operations and obvious defects.'},
+    {num:4, text:'Control mechanisms — for improper operation, insecure mounting, and restricted travel.'},
+  ]},
+  {section:'i', title:'(i) Radio Group — inspect (where applicable):', items:[
+    {num:1, text:'Radio and electronic equipment — for improper installation and insecure mounting.'},
+    {num:2, text:'Wiring and conduits — for improper routing, insecure mounting, and obvious defects.'},
+    {num:3, text:'Bonding and shielding — for improper installation and poor condition.'},
+    {num:4, text:'Antenna including trailing antenna — for poor condition, insecure mounting, and improper operation.'},
+  ]},
+  {section:'j', single:true, text:'(j) Miscellaneous Items — inspect (where applicable) each installed miscellaneous item not otherwise covered by this listing for improper installation and improper operation.'},
+];
+
+const checklistState = {}; // id -> boolean, default blank/false for every item
+
+function checklistItemId(section, num){ return num ? section + num : section; }
+
+function buildChecklistItemEl(section, num, text){
+  const id = checklistItemId(section, num);
+  const row = document.createElement('div');
+  row.className = 'checklist-item' + (num ? '' : ' single') + (checklistState[id] ? ' inspected' : '');
+  row.innerHTML = `<div class="num">${num ? '('+num+')' : ''}</div>
+    <div class="txt">${text}</div>
+    <label class="insp"><input type="radio" ${checklistState[id] ? 'checked' : ''}><span>Inspected</span></label>`;
+  const input = row.querySelector('input');
+  input.dataset.wasChecked = checklistState[id] ? 'true' : 'false';
+  input.addEventListener('click', ()=>{
+    const next = input.dataset.wasChecked !== 'true';
+    input.checked = next;
+    input.dataset.wasChecked = next ? 'true' : 'false';
+    checklistState[id] = next;
+    row.classList.toggle('inspected', next);
+    updateChecklistProgress();
+  });
+  return row;
+}
+
+function renderChecklist(){
+  const el = document.getElementById('checklist-list');
+  el.innerHTML = '';
+  inspectionChecklist.forEach(sec=>{
+    if(sec.single){
+      el.appendChild(buildChecklistItemEl(sec.section, null, sec.text));
+    } else {
+      const block = document.createElement('div');
+      block.className = 'checklist-block';
+      const header = document.createElement('div');
+      header.className = 'checklist-header';
+      header.textContent = sec.title;
+      block.appendChild(header);
+      sec.items.forEach(it=> block.appendChild(buildChecklistItemEl(sec.section, it.num, it.text)));
+      el.appendChild(block);
+    }
+  });
+  updateChecklistProgress();
+}
+
+function checklistTotals(){
+  const total = inspectionChecklist.reduce((s,sec)=> s + (sec.single ? 1 : sec.items.length), 0);
+  const done = Object.values(checklistState).filter(Boolean).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  return {total, done, pct};
+}
+
+function updateChecklistProgress(){
+  const {total, done, pct} = checklistTotals();
+  const fill = document.getElementById('checklist-progress-fill');
+  const label = document.getElementById('checklist-progress-label');
+  if(fill) fill.style.width = pct + '%';
+  if(label) label.textContent = `${done} of ${total} inspected (${pct}%)`;
+}
+
+function resetChecklist(){
+  Object.keys(checklistState).forEach(k=> checklistState[k]=false);
+  renderChecklist();
+}
+
+function sendCustomerUpdate(){
+  const phoneRaw = (document.getElementById('f-customer-phone').value || '').trim();
+  if(!phoneRaw){
+    alert('Enter the Customer Phone number in the Customer & Aircraft panel first.');
+    return;
+  }
+  const phone = phoneRaw.replace(/[^0-9+]/g, '');
+  const {total, done, pct} = checklistTotals();
+  const shop = (document.getElementById('f-shop-name').value || '').trim() || 'Your shop';
+  const tail = (document.getElementById('f-tail').value || '').trim();
+  const aircraftPart = tail ? ` for ${tail}` : '';
+  const msg = `${shop}: Inspection update${aircraftPart} — ${done} of ${total} checklist items complete (${pct}%).`;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const sep = isIOS ? '&' : '?';
+  window.location.href = `sms:${phone}${sep}body=${encodeURIComponent(msg)}`;
+}
+
+/* ---------------- Rendering ---------------- */
+
+// Builds a 1-9 hour-quantity <select> for an editable item, or an empty string
+// for items with no fixed hours (e.g. the dynamic Twin Engine entry).
+function hrGroupHtml(it){
+  if(it.hours==null) return '<span class="hrs"></span>';
+  let opts = '';
+  for(let h=1; h<=9; h++) opts += `<option value="${h}">${h}</option>`;
+  return `<span class="hr-group"><select class="hr-select" data-hr-id="${it.id}">${opts}</select><span class="hr-unit">hr</span></span>`;
+}
+
+// Wires the hour <select> inside a just-built option label: sets its current
+// value from state and stops clicks from toggling the radio/checkbox behind it.
+function wireHrSelect(label, id){
+  const sel = label.querySelector('select.hr-select');
+  if(!sel) return;
+  const current = state.hourOverrides[id];
+  sel.value = String(current!=null ? current : 1);
+  sel.addEventListener('click', e=> e.stopPropagation());
+  sel.addEventListener('mousedown', e=> e.stopPropagation());
+  sel.addEventListener('change', e=>{
+    e.stopPropagation();
+    state.hourOverrides[id] = parseInt(e.target.value, 10);
+    renderAll();
+  });
+}
+
+function radioGroup(container, items, groupName, selectedId, onChange){
+  const el = document.getElementById(container);
+  el.innerHTML = '';
+  items.forEach(it=>{
+    const label = document.createElement('label');
+    label.className = 'opt' + (selectedId===it.id ? ' checked':'');
+    label.innerHTML = `<input type="radio" name="${groupName}" ${selectedId===it.id?'checked':''}>
+      <span>${it.label}</span>${hrGroupHtml(it)}`;
+    label.querySelector('input').addEventListener('change', ()=>{ onChange(it.id); renderAll(); });
+    wireHrSelect(label, it.id);
+    el.appendChild(label);
+  });
+}
+
+function checkGroup(container, items, selectedMap, onChange){
+  const el = document.getElementById(container);
+  el.innerHTML = '';
+  items.forEach(it=>{
+    const checked = !!selectedMap[it.id];
+    const label = document.createElement('label');
+    label.className = 'opt' + (checked ? ' checked':'');
+    label.innerHTML = `<input type="checkbox" ${checked?'checked':''}>
+      <span>${it.label}</span>${hrGroupHtml(it)}`;
+    label.querySelector('input').addEventListener('change', (e)=>{ onChange(it.id, e.target.checked); renderAll(); });
+    wireHrSelect(label, it.id);
+    el.appendChild(label);
+  });
+}
+
+function renderControls(){
+  radioGroup('grp-prop-blades', propBlades, 'propBlade', state.propBlade, id=>state.propBlade=id);
+  checkGroup('grp-const-speed', constSpeed, {cs:state.constSpeed}, (id,val)=>state.constSpeed=val);
+  radioGroup('grp-engine', engineCyl, 'engine', state.engine, id=>state.engine=id);
+  checkGroup('grp-twin', twin, {tw:state.twin}, (id,val)=>state.twin=val);
+  radioGroup('grp-gear', gear, 'gear', state.gear, id=>state.gear=id);
+  radioGroup('grp-wings', wings, 'wing', state.wing, id=>state.wing=id);
+  radioGroup('grp-fuselage', fuselage, 'fuselage', state.fuselage, id=>state.fuselage=id);
+  checkGroup('grp-equip', equip, state.equip, (id,val)=>state.equip[id]=val);
+}
+
+/* ---------------- Calculation ---------------- */
+
+function find(arr,id){ return arr.find(x=>x.id===id); }
+
+function calcAnnual(){
+  let hours = 0, days = 0;
+  const H = id => state.hourOverrides[id]; // current (possibly user-edited) hour quantity for an item
+
+  const bladeHrs = H(state.propBlade);
+  hours += bladeHrs; days += bladeHrs/4;                      // H13 divisor 4
+
+  if(state.constSpeed){ const csHrs = H('cs'); hours += csHrs; days += csHrs/4; } // constant speed inside same /4 group
+
+  const engHrs = H(state.engine);
+  hours += engHrs; days += engHrs/6;                          // O13 divisor 6
+
+  if(state.twin){ hours += engHrs; }                          // Q10: adds matching engine hours again, no day impact
+
+  const gearHrs = H(state.gear);
+  hours += gearHrs; days += gearHrs/6;                        // O20 divisor 6
+
+  const wingHrs = H(state.wing);
+  hours += wingHrs; days += wingHrs/4;                        // H26 divisor 4
+
+  const fuseHrs = H(state.fuselage);
+  hours += fuseHrs; days += fuseHrs/4;                        // O26 divisor 4
+
+  equip.forEach(it=>{
+    if(state.equip[it.id]) hours += H(it.id);                 // hours only if equipped (uses edited quantity)
+    days += it.days;                                          // days always (matches spreadsheet, not user-editable)
+  });
+
+  // Always-included baseline
+  hours += 8;  days += 8/8;   // AD Research: 8 hrs = 1 day
+  hours += 1;                 // Wash: 1 hr, no day impact
+
+  return {hours, days};
+}
+
+// ---- Component R&R hour-override dropdowns (1-9 by default, 1-25 for engine jobs) ----
+function fillHourOptions(id, max){
+  const el = document.getElementById(id);
+  let html = '';
+  for(let h=1; h<=max; h++) html += `<option value="${h}">${h}</option>`;
+  el.innerHTML = html;
+}
+function setHourDefault(id, val, max){
+  const el = document.getElementById(id);
+  const clamped = Math.min(max, Math.max(1, Math.round(val)));
+  el.value = String(clamped);
+}
+function initComponentHourSelects(){
+  fillHourOptions('c-prop-hrs', 9);
+  fillHourOptions('c-cyl-hrs', 9);
+  fillHourOptions('c-engine-hrs', 25);
+  fillHourOptions('c-alt-hrs', 9);
+  fillHourOptions('c-oil-hrs', 9);
+  fillHourOptions('c-mount-hrs', 25);
+
+  setHourDefault('c-prop-hrs', parseFloat(document.getElementById('c-prop-type').value), 9);
+  updateCylHoursDefault();
+  setHourDefault('c-engine-hrs', parseFloat(document.getElementById('c-engine-type').value), 25);
+  setHourDefault('c-alt-hrs', parseFloat(document.getElementById('c-alt-type').value), 9);
+  setHourDefault('c-oil-hrs', 4, 9);
+  setHourDefault('c-mount-hrs', 25, 25);
+
+  document.getElementById('c-prop-type').addEventListener('change', e=>{
+    setHourDefault('c-prop-hrs', parseFloat(e.target.value), 9);
+  });
+  document.getElementById('c-engine-type').addEventListener('change', e=>{
+    setHourDefault('c-engine-hrs', parseFloat(e.target.value), 25);
+  });
+  document.getElementById('c-alt-type').addEventListener('change', e=>{
+    setHourDefault('c-alt-hrs', parseFloat(e.target.value), 9);
+  });
+  document.getElementById('c-cyl-type').addEventListener('change', updateCylHoursDefault);
+  document.getElementById('c-cyl-qty').addEventListener('change', updateCylHoursDefault);
+  document.getElementById('c-cyl-extra').addEventListener('input', updateCylHoursDefault);
+}
+function updateCylHoursDefault(){
+  const [one, two] = document.getElementById('c-cyl-type').value.split(',').map(Number);
+  const qty = parseInt(document.getElementById('c-cyl-qty').value,10);
+  const extra = Math.max(0, parseInt(document.getElementById('c-cyl-extra').value||0,10));
+  const marginal = two - one;
+  const suggested = (qty===1? one : two) + extra*(marginal/2); // "add 1/2 time for each additional cylinder"
+  setHourDefault('c-cyl-hrs', suggested, 9);
+}
+
+function addComponent(selectId, mapper, hoursId){
+  const v = document.getElementById(selectId).value;
+  const item = mapper(v);
+  if(hoursId){ item.hours = parseFloat(document.getElementById(hoursId).value); }
+  componentItems.push(item);
+  renderAll();
+}
+function addFixed(label, hoursId){
+  const hours = parseFloat(document.getElementById(hoursId).value);
+  componentItems.push({label, hours});
+  renderAll();
+}
+function addCylinder(){
+  const injLabel = document.getElementById('c-cyl-type').selectedOptions[0].textContent;
+  const qty = parseInt(document.getElementById('c-cyl-qty').value,10);
+  const extra = Math.max(0, parseInt(document.getElementById('c-cyl-extra').value||0,10));
+  const hours = parseFloat(document.getElementById('c-cyl-hrs').value);
+  let label = `Cylinder R&R — ${injLabel} — ${qty} cyl${extra>0? ' + '+extra+' extra':''}`;
+  componentItems.push({label, hours});
+  renderAll();
+}
+function removeComponent(idx){
+  componentItems.splice(idx,1);
+  renderAll();
+}
+
+/* ---------------- Totals / render ---------------- */
+
+function renderComponentTable(){
+  const tbody = document.getElementById('comp-tbody');
+  const empty = document.getElementById('comp-empty');
+  const rate = parseFloat(document.getElementById('f-rate').value)||0;
+  tbody.innerHTML = '';
+  if(componentItems.length===0){ empty.style.display='block'; }
+  else { empty.style.display='none'; }
+  componentItems.forEach((it,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.label}</td><td class="num">${it.hours.toFixed(2)}</td><td class="num">$${(it.hours*rate).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td><button class="rm-btn" onclick="removeComponent(${idx})">&times;</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAll(){
+  renderControls();
+  renderComponentTable();
+
+  const rate = parseFloat(document.getElementById('f-rate').value)||0;
+  const parts = parseFloat(document.getElementById('f-parts').value)||0;
+
+  const annual = calcAnnual();
+  const compHours = componentItems.reduce((s,it)=>s+it.hours,0);
+  const totalHours = annual.hours + compHours;
+  const laborCost = totalHours * rate;
+  const grand = laborCost + parts;
+
+  document.getElementById('t-annual-hrs').textContent = annual.hours.toFixed(2);
+  document.getElementById('t-comp-hrs').textContent = compHours.toFixed(2);
+  document.getElementById('t-total-hrs').textContent = totalHours.toFixed(2);
+  const fmtMoneyUI = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('t-labor').textContent = fmtMoneyUI(laborCost);
+  document.getElementById('t-parts').textContent = fmtMoneyUI(parts);
+  document.getElementById('t-grand').textContent = fmtMoneyUI(grand);
+  document.getElementById('t-days').textContent = `Est. ${annual.days.toFixed(2)} shop days (annual only)`;
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('f-rate').addEventListener('input', renderAll);
+document.getElementById('f-parts').addEventListener('input', renderAll);
+
+function resetAll(){
+  state.propBlade='b3'; state.constSpeed=false; state.engine='e6'; state.twin=true;
+  state.gear='gf'; state.wing='wl'; state.fuselage='fl';
+  state.equip = {emp:true, oxy:true, ams:false, tks:false, tail:true, ap:true};
+  state.hourOverrides = defaultHourOverrides();
+  componentItems.length = 0;
+  renderAll();
+}
+
+initComponentHourSelects();
+renderAll();
+renderChecklist();
+
+/* =========================================================================
+   DOCX QUOTE GENERATOR
+   Zero-dependency .docx (OOXML) writer: builds a minimal valid ZIP package
+   by hand (CRC32 + "stored" entries, no compression library needed) so the
+   whole app stays a single offline HTML file with no external requests.
+   ========================================================================= */
+
+// ---- ZIP / CRC32 ----
+const _crcTable = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function _crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = (crc >>> 8) ^ _crcTable[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function _strToBytes(str){ return new TextEncoder().encode(str); }
+function _u16(v){ return new Uint8Array([v & 0xFF, (v>>>8) & 0xFF]); }
+function _u32(v){ return new Uint8Array([v&0xFF,(v>>>8)&0xFF,(v>>>16)&0xFF,(v>>>24)&0xFF]); }
+function _concat(arrs){
+  let total = arrs.reduce((s,a)=>s+a.length,0);
+  let out = new Uint8Array(total);
+  let off = 0;
+  for(const a of arrs){ out.set(a, off); off += a.length; }
+  return out;
+}
+function _buildZip(files){
+  const localChunks = [], centralChunks = [];
+  let offset = 0;
+  for(const f of files){
+    const nameBytes = _strToBytes(f.name);
+    const data = f.data;
+    const crc = _crc32(data);
+    const size = data.length;
+    const localHeader = _concat([
+      new Uint8Array([0x50,0x4b,0x03,0x04]),
+      _u16(20), _u16(0x0800), _u16(0), _u16(0), _u16(0),
+      _u32(crc), _u32(size), _u32(size),
+      _u16(nameBytes.length), _u16(0),
+      nameBytes
+    ]);
+    const localEntry = _concat([localHeader, data]);
+    localChunks.push(localEntry);
+    const centralHeader = _concat([
+      new Uint8Array([0x50,0x4b,0x01,0x02]),
+      _u16(20), _u16(20), _u16(0x0800), _u16(0), _u16(0), _u16(0),
+      _u32(crc), _u32(size), _u32(size),
+      _u16(nameBytes.length), _u16(0), _u16(0),
+      _u16(0), _u16(0), _u32(0),
+      _u32(offset),
+      nameBytes
+    ]);
+    centralChunks.push(centralHeader);
+    offset += localEntry.length;
+  }
+  const centralDir = _concat(centralChunks);
+  const centralStart = offset;
+  const eocd = _concat([
+    new Uint8Array([0x50,0x4b,0x05,0x06]),
+    _u16(0), _u16(0),
+    _u16(files.length), _u16(files.length),
+    _u32(centralDir.length), _u32(centralStart),
+    _u16(0)
+  ]);
+  return _concat([...localChunks, centralDir, eocd]);
+}
+
+// ---- OOXML helpers ----
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _run(text, opt={}){
+  const rpr = [];
+  if(opt.bold) rpr.push('<w:b/>');
+  if(opt.italic) rpr.push('<w:i/>');
+  if(opt.color) rpr.push(`<w:color w:val="${opt.color}"/>`);
+  if(opt.size) rpr.push(`<w:sz w:val="${opt.size}"/>`);
+  rpr.push('<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>');
+  const rprXml = rpr.length ? `<w:rPr>${rpr.join('')}</w:rPr>` : '';
+  return `<w:r>${rprXml}<w:t xml:space="preserve">${_esc(text)}</w:t></w:r>`;
+}
+function _para(runsXml, opt={}){
+  const ppr = [];
+  if(opt.align) ppr.push(`<w:jc w:val="${opt.align}"/>`);
+  if(opt.spacingAfter!=null || opt.spacingBefore!=null) ppr.push(`<w:spacing w:after="${opt.spacingAfter||0}" w:before="${opt.spacingBefore||0}"/>`);
+  const pprXml = ppr.length ? `<w:pPr>${ppr.join('')}</w:pPr>` : '';
+  return `<w:p>${pprXml}${runsXml}</w:p>`;
+}
+function _cell(contentXml, opt={}){
+  const tcpr = [];
+  if(opt.width) tcpr.push(`<w:tcW w:w="${opt.width}" w:type="dxa"/>`);
+  if(opt.fill) tcpr.push(`<w:shd w:val="clear" w:fill="${opt.fill}"/>`);
+  if(opt.margins) tcpr.push(`<w:tcMar><w:top w:w="${opt.margins}" w:type="dxa"/><w:bottom w:w="${opt.margins}" w:type="dxa"/><w:left w:w="${opt.margins}" w:type="dxa"/><w:right w:w="${opt.margins}" w:type="dxa"/></w:tcMar>`);
+  const tcprXml = tcpr.length ? `<w:tcPr>${tcpr.join('')}</w:tcPr>` : '';
+  return `<w:tc>${tcprXml}${contentXml}</w:tc>`;
+}
+function _row(cellsXml){ return `<w:tr>${cellsXml.join('')}</w:tr>`; }
+function _table(rowsXml, opt={}){
+  const borderColor = opt.borderColor || 'E8C36A';
+  const borders = `<w:tblBorders>
+    <w:top w:val="single" w:sz="4" w:color="${borderColor}"/>
+    <w:left w:val="single" w:sz="4" w:color="${borderColor}"/>
+    <w:bottom w:val="single" w:sz="4" w:color="${borderColor}"/>
+    <w:right w:val="single" w:sz="4" w:color="${borderColor}"/>
+    <w:insideH w:val="single" w:sz="4" w:color="${borderColor}"/>
+    <w:insideV w:val="single" w:sz="4" w:color="${borderColor}"/>
+  </w:tblBorders>`;
+  return `<w:tbl><w:tblPr><w:tblW w:w="${opt.width||9350}" w:type="dxa"/>${opt.noBorders?'':borders}<w:tblLayout w:type="fixed"/></w:tblPr>
+  ${rowsXml.join('')}</w:tbl>`;
+}
+
+// ---- palette (navy & gold, matching the shop's "annual quote form" reference) ----
+const DOCX_C = {
+  navy:'1F3864', gold:'B8860B',
+  rowTint:'DEE6F2', white:'FFFFFF',
+  ink:'1A1A1A', inkSoft:'555555',
+};
+
+function _hr(color, sz){
+  return `<w:p><w:pPr><w:spacing w:after="200"/><w:pBdr><w:bottom w:val="single" w:sz="${sz||10}" w:color="${color}" w:space="1"/></w:pBdr></w:pPr></w:p>`;
+}
+function _sectionHeading(text){
+  return `<w:p><w:pPr><w:spacing w:before="260" w:after="120"/><w:pBdr><w:bottom w:val="single" w:sz="8" w:color="${DOCX_C.gold}" w:space="4"/></w:pBdr></w:pPr>${_run(text, {bold:true, color:DOCX_C.navy, size:26})}</w:p>`;
+}
+function _labelValueRow(pairs, widths){
+  const w = widths || [1600,2775,1600,2775];
+  const cells = [];
+  pairs.forEach(([label, value], i)=>{
+    cells.push(_cell(_para(_run(label, {bold:true, color:DOCX_C.white, size:15})), {width:w[i*2], fill:DOCX_C.navy, margins:100}));
+    cells.push(_cell(_para(_run(value, {size:17, color:DOCX_C.ink})), {width:w[i*2+1], margins:100}));
+  });
+  return _row(cells);
+}
+
+// Build the human-readable scope/labor/component content from current app state
+function buildQuoteContent(){
+  const rate = parseFloat(document.getElementById('f-rate').value)||0;
+  const parts = parseFloat(document.getElementById('f-parts').value)||0;
+  const annual = calcAnnual();
+  const model = document.getElementById('f-model').value || 'Aircraft';
+
+  const bladeLabel = find(propBlades, state.propBlade).label.toLowerCase();
+  const engLabel = find(engineCyl, state.engine).label;
+  const gearLabel = find(gear, state.gear).label.toLowerCase();
+
+  const scopeItems = [];
+  scopeItems.push({item:'Airframe Inspection', desc:`Complete annual inspection of airframe, structure, flight controls, landing gear, and systems in accordance with 14 CFR Part 43 Appendix D and the ${model} maintenance manual.`});
+  scopeItems.push({item:'Engine Inspection', desc:`Annual inspection of the ${engLabel.toLowerCase()} powerplant, accessories, mounts, controls, exhaust, and induction systems; compression check and oil/filter service per manufacturer requirements.${state.twin? ' Includes inspection of both engines (twin-engine aircraft).':''}`});
+  scopeItems.push({item:'Propeller Inspection', desc:`Inspection of propeller assembly, ${bladeLabel}, hub, and spinner${state.constSpeed? ', including constant-speed governor,':''} for condition, security, and airworthiness.`});
+  scopeItems.push({item:'Landing Gear Inspection', desc:`Inspection of ${gearLabel}, struts, brakes, tires, and related systems for condition and proper operation.`});
+  scopeItems.push({item:'Wing & Fuselage Inspection', desc:`Inspection of wing and fuselage structure, skins, and attach points per manufacturer maintenance data.`});
+  if(state.equip.oxy) scopeItems.push({item:'Oxygen System Inspection', desc:'Inspection of the onboard oxygen system, bottle hydrostatic date verification, pressure check, plumbing, masks, and regulator condition.'});
+  if(state.equip.ams) scopeItems.push({item:'AMSAFE Airbag Seatbelt Inspection', desc:'Inspection of AMSAFE airbag seatbelt system for condition and proper deployment readiness.'});
+  if(state.equip.tks) scopeItems.push({item:'TKS Known-Icing System Inspection', desc:'Inspection of the TKS known-icing system, panels, plumbing, and fluid pump for condition and operation.'});
+  if(state.equip.ap) scopeItems.push({item:'Autopilot Inspection', desc:'Inspection and operational check of the autopilot system, servos, bridle cables, and associated wiring per applicable service documentation.'});
+  if(state.equip.emp) scopeItems.push({item:'Empennage Inspection', desc:'Inspection of empennage structure, control surfaces, and attach hardware for condition and security.'});
+  if(state.equip.tail) scopeItems.push({item:'Tail Section Equipment Inspection', desc:'Inspection of tail section-mounted equipment and related systems for condition and proper operation.'});
+  scopeItems.push({item:'AD Compliance History Search', desc:'Research and review of Airworthiness Directive compliance history for airframe, engine, propeller, and appliances; preparation of an updated AD compliance record.'});
+
+  const fmtMoney = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  const componentLines = componentItems.map(it => ({
+    label: it.label,
+    hours: `${it.hours.toFixed(2)} hrs`,
+    price: fmtMoney(it.hours*rate),
+  }));
+
+  const compHours = componentItems.reduce((s,it)=>s+it.hours,0);
+  const totalHours = annual.hours + compHours;
+  const laborCost = totalHours * rate;
+  const totalPrice = fmtMoney(laborCost+parts);
+
+  const downtime = `${annual.days.toFixed(2)} estimated shop days (approx. ${Math.ceil(annual.days)} business days) from the scheduled start date, barring discrepancies requiring additional repair or parts procurement.`;
+
+  return {
+    scopeItems, componentLines, model,
+    aircraftCategory: state.twin ? 'Multi-Engine Piston' : 'Single-Engine Piston',
+    annualHoursStr: `${annual.hours.toFixed(2)} hrs`,
+    rateStr: `${fmtMoney(rate)}/hr`,
+    laborTotalStr: fmtMoney(annual.hours*rate),
+    totalHoursStr: `${totalHours.toFixed(2)} hrs`,
+    laborSubtotalStr: fmtMoney(laborCost),
+    partsStr: fmtMoney(parts),
+    totalPrice, downtime,
+  };
+}
+
+function _buildDocumentXml(data){
+  const C = DOCX_C;
+
+  // Header: shop name/credentials (left) + address block (right)
+  const headerBlock = _table([
+    _row([
+      _cell(
+        _para(_run(data.shopName || 'Your Shop Name', {bold:true, color:C.navy, size:34})) +
+        _para(_run(data.preparedBy ? `${data.preparedBy} — Certificated Airframe & Powerplant Mechanic` : 'Certificated Airframe & Powerplant Mechanic — Inspection Authorization', {color:C.inkSoft, size:16}), {spacingBefore:40})
+      , {width:5670}),
+      _cell(
+        _para(_run(data.shopAddress||'', {color:C.inkSoft, size:16}), {align:'right'}) +
+        _para(_run([data.shopPhone, data.shopEmail].filter(Boolean).join('  |  '), {color:C.inkSoft, size:16}), {align:'right', spacingBefore:20})
+      , {width:3680})
+    ])
+  ], {noBorders:true});
+
+  // Title: "Price Quote" (left) + Quote Date / Valid Through (right)
+  const titleBlock = _table([
+    _row([
+      _cell(
+        _para(_run('Price Quote', {bold:true, color:C.navy, size:32})) +
+        _para(_run(`Annual Inspection — ${data.makeModel||'Aircraft'}`, {color:C.inkSoft, size:18}), {spacingBefore:20})
+      , {width:5670}),
+      _cell(
+        _para(_run('Quote Date:  ', {bold:true, color:C.navy, size:17}) + _run(data.date, {size:17, color:C.ink}), {align:'right'}) +
+        _para(_run('Valid Through:  ', {bold:true, color:C.navy, size:17}) + _run(data.validThru, {size:17, color:C.ink}), {align:'right', spacingBefore:20})
+      , {width:3680})
+    ])
+  ], {noBorders:true});
+
+  const infoTable = _table([
+    _labelValueRow([['MAKE / MODEL', data.makeModel],['REGISTRATION', data.registration]]),
+    _labelValueRow([['SERIAL NUMBER', data.serialNumber],['TOTAL TIME', data.totalTime]]),
+    _labelValueRow([['CUSTOMER', data.customerName],['PHONE', data.customerPhone]]),
+    _labelValueRow([['ADDRESS', data.customerAddress],['EMAIL', data.customerEmail]]),
+    _labelValueRow([['PREPARED BY', data.preparedBy],['QUOTE NO.', data.quoteNo]]),
+  ], {borderColor:C.rowTint});
+
+  const rateSummaryTable = _table([
+    _row([
+      _cell(_para(_run('AIRCRAFT CATEGORY', {bold:true, color:C.white, size:14})), {fill:C.navy, width:2100, margins:100}),
+      _cell(_para(_run('INSPECTION TYPE', {bold:true, color:C.white, size:14})), {fill:C.navy, width:2100, margins:100}),
+      _cell(_para(_run('LABOR RATE', {bold:true, color:C.white, size:14})), {fill:C.navy, width:1700, margins:100}),
+      _cell(_para(_run('EST. HOURS', {bold:true, color:C.white, size:14})), {fill:C.navy, width:1700, margins:100}),
+      _cell(_para(_run('ESTIMATED LABOR TOTAL', {bold:true, color:C.white, size:14})), {fill:C.navy, width:1750, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run(data.aircraftCategory, {size:16})), {width:2100, margins:100}),
+      _cell(_para(_run('Annual Inspection', {size:16})), {width:2100, margins:100}),
+      _cell(_para(_run(data.rateStr, {size:16})), {width:1700, margins:100}),
+      _cell(_para(_run(data.annualHoursStr, {size:16})), {width:1700, margins:100}),
+      _cell(_para(_run(data.laborTotalStr, {bold:true, size:16, color:C.navy})), {width:1750, margins:100}),
+    ]),
+  ], {borderColor:C.rowTint});
+
+  const scopeRows = [ _row([
+      _cell(_para(_run('ITEM', {bold:true, color:C.white, size:15})), {fill:C.navy, width:2500, margins:100}),
+      _cell(_para(_run('DESCRIPTION OF WORK', {bold:true, color:C.white, size:15})), {fill:C.navy, width:6850, margins:100}),
+  ]) ];
+  data.scopeItems.forEach((it,idx)=>{
+    scopeRows.push(_row([
+      _cell(_para(_run(it.item, {bold:true, color:C.ink, size:16})), {width:2500, fill: idx%2? C.rowTint: C.white, margins:100}),
+      _cell(_para(_run(it.desc, {size:16, color:C.ink})), {width:6850, fill: idx%2? C.rowTint: C.white, margins:100}),
+    ]));
+  });
+  const scopeTable = _table(scopeRows, {borderColor:C.rowTint});
+
+  let componentSection = '';
+  if(data.componentLines.length){
+    const compRows = [ _row([
+      _cell(_para(_run('COMPONENT', {bold:true, color:C.white, size:15})), {fill:C.navy, width:4000, margins:100}),
+      _cell(_para(_run('EST. LABOR HOURS', {bold:true, color:C.white, size:15})), {fill:C.navy, width:2675, margins:100}),
+      _cell(_para(_run('FLAT LABOR PRICE', {bold:true, color:C.white, size:15})), {fill:C.navy, width:2675, margins:100}),
+    ]) ];
+    data.componentLines.forEach((l,idx)=>{
+      compRows.push(_row([
+        _cell(_para(_run(l.label, {size:16})), {width:4000, fill: idx%2? C.rowTint:C.white, margins:100}),
+        _cell(_para(_run(l.hours, {size:16}), {align:'right'}), {width:2675, fill: idx%2? C.rowTint:C.white, margins:100}),
+        _cell(_para(_run(l.price, {size:16}), {align:'right'}), {width:2675, fill: idx%2? C.rowTint:C.white, margins:100}),
+      ]));
+    });
+    componentSection = _sectionHeading('Component Remove & Replace') +
+      _para(_run('Flat-rate pricing below covers labor for removal and reinstallation of the components selected for this quote. Parts are billed separately at cost plus standard markup (see Terms).', {size:17, color:C.inkSoft}), {spacingAfter:120}) +
+      _table(compRows, {borderColor:C.rowTint});
+  }
+
+  const summaryTable = _table([
+    _row([
+      _cell(_para(_run('Total Labor Hours', {size:17})), {width:6850, fill:C.white, margins:100}),
+      _cell(_para(_run(data.totalHoursStr, {size:17}), {align:'right'}), {width:2500, fill:C.white, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run('Labor Rate', {size:17})), {width:6850, fill:C.rowTint, margins:100}),
+      _cell(_para(_run(data.rateStr, {size:17}), {align:'right'}), {width:2500, fill:C.rowTint, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run('Labor Subtotal', {size:17})), {width:6850, fill:C.white, margins:100}),
+      _cell(_para(_run(data.laborSubtotalStr, {size:17}), {align:'right'}), {width:2500, fill:C.white, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run('Parts / Materials', {size:17})), {width:6850, fill:C.rowTint, margins:100}),
+      _cell(_para(_run(data.partsStr, {size:17}), {align:'right'}), {width:2500, fill:C.rowTint, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run('TOTAL QUOTED PRICE', {bold:true, color:C.white, size:20})), {fill:C.navy, width:6850, margins:100}),
+      _cell(_para(_run(data.totalPrice, {bold:true, color:C.white, size:20}), {align:'right'}), {fill:C.navy, width:2500, margins:100}),
+    ]),
+  ], {borderColor:C.rowTint});
+
+  const scheduleTable = _table([
+    _row([
+      _cell(_para(_run('ESTIMATED DOWNTIME', {bold:true, color:C.white, size:15})), {fill:C.navy, width:2800, margins:100}),
+      _cell(_para(_run(data.downtime, {size:16})), {width:6550, margins:100}),
+    ]),
+    _row([
+      _cell(_para(_run('SCHEDULED START', {bold:true, color:C.white, size:15})), {fill:C.navy, width:2800, margins:100}),
+      _cell(_para(_run(data.scheduledStart, {size:16})), {width:6550, margins:100}),
+    ]),
+  ], {borderColor:C.rowTint});
+
+  const termsParas = data.terms.map(t=> _para(_run('•  ', {bold:true, color:C.gold}) + _run(t, {size:16, color:C.inkSoft}), {spacingAfter:80}) ).join('');
+
+  const body = [
+    headerBlock, _hr(C.gold, 12),
+    titleBlock, _para(_run('')),
+    _sectionHeading('Aircraft & Customer Information'), infoTable,
+    _sectionHeading('Inspection Labor & Scope'),
+    _para(_run('This annual inspection is billed at an hourly labor rate, with estimated hours shown below based on the aircraft configuration selected. Final invoice reflects actual hours worked; any additional discrepancies found during inspection are quoted separately per the policy below.', {size:17, color:C.inkSoft}), {spacingAfter:120}),
+    rateSummaryTable, _para(_run('')),
+    scopeTable,
+    componentSection,
+    _sectionHeading('Quotation Summary'), summaryTable,
+    _sectionHeading('Schedule'), scheduleTable,
+    _sectionHeading('Discrepancy & Squawk Repair Policy'),
+    _para(_run('This quote covers the base inspection only. Any airworthiness discrepancies discovered during the inspection will be documented and reviewed with the owner before further work begins. Repair of discrepancies is billed separately at the hourly labor rate above, plus parts. No repair work beyond the inspection scope will be performed without owner authorization.', {size:17, color:C.inkSoft})),
+    _sectionHeading('Terms & Payment Policy'), termsParas,
+    _hr(C.gold, 8),
+    _para(_run('Quote valid for 30 days from the date shown above. Thank you for trusting your aircraft’s airworthiness to our shop.', {italic:true, color:C.inkSoft, size:16}), {align:'center', spacingBefore:100}),
+  ].join('');
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${body}
+<w:sectPr>
+<w:pgSz w:w="12240" w:h="15840"/>
+<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/>
+</w:sectPr>
+</w:body>
+</w:document>`;
+}
+
+// Shared data-gathering used by both the .docx generator and the print/PDF view,
+// so the two output formats never drift out of sync.
+function gatherQuoteData(){
+  const today = new Date();
+  const fmt = d => `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()}`;
+  const validThru = new Date(today); validThru.setDate(validThru.getDate()+30);
+
+  const content = buildQuoteContent();
+
+  return {
+    shopName: document.getElementById('f-shop-name').value,
+    shopAddress: document.getElementById('f-shop-address').value,
+    shopPhone: document.getElementById('f-shop-phone').value,
+    shopEmail: document.getElementById('f-shop-email').value,
+    preparedBy: document.getElementById('f-prepared-by').value,
+    quoteNo: document.getElementById('f-quote-no').value || '0001',
+    date: fmt(today),
+    validThru: fmt(validThru),
+    customerName: document.getElementById('f-customer').value,
+    customerAddress: document.getElementById('f-customer-address').value,
+    customerPhone: document.getElementById('f-customer-phone').value,
+    customerEmail: document.getElementById('f-customer-email').value,
+    makeModel: document.getElementById('f-model').value,
+    registration: document.getElementById('f-tail').value,
+    serialNumber: document.getElementById('f-serial').value,
+    totalTime: document.getElementById('f-total-time').value,
+    scheduledStart: document.getElementById('f-scheduled-start').value || 'TBD upon acceptance',
+    scopeItems: content.scopeItems,
+    componentLines: content.componentLines,
+    aircraftCategory: content.aircraftCategory,
+    annualHoursStr: content.annualHoursStr,
+    rateStr: content.rateStr,
+    laborTotalStr: content.laborTotalStr,
+    totalHoursStr: content.totalHoursStr,
+    laborSubtotalStr: content.laborSubtotalStr,
+    partsStr: content.partsStr,
+    totalPrice: content.totalPrice,
+    downtime: content.downtime,
+    terms: [
+      'Parts, consumables, and shop supplies used during the inspection are billed separately from labor and are not included in this quote.',
+      'Parts and materials are billed at cost plus a 25% handling markup.',
+      'Airworthiness Directive compliance is limited to research and record review; labor and parts required to comply with any outstanding AD are billed separately.',
+      'The owner is responsible for providing all aircraft logbooks and maintenance records prior to the start of the inspection.',
+      'Payment is due in full upon completion of work and prior to aircraft release. Accepted payment methods: cash, check, or card (3% processing fee applies to card payments).',
+      'A deposit of 25% may be requested for inspections requiring pre-ordered parts.',
+      'Estimated downtime assumes normal parts availability and no significant discrepancies; delays caused by parts backorder or owner-approved additional work will extend the schedule. This quote is an estimate and actual charges may vary based on aircraft condition and discrepancies found.',
+    ],
+  };
+}
+
+// ---- Print / Save Quote (PDF) — renders the same navy & gold quote layout
+// used by the .docx download into a hidden container, then triggers the
+// browser's print dialog (which the user can "Save as PDF" from). ----
+function buildPrintQuoteHtml(data){
+  const esc = _esc;
+  const infoRow = (l1,v1,l2,v2) => `<tr><td class="pq-label">${esc(l1)}</td><td>${esc(v1)}</td><td class="pq-label">${esc(l2)}</td><td>${esc(v2)}</td></tr>`;
+
+  const scopeRows = data.scopeItems.map(it => `<tr><td><b>${esc(it.item)}</b></td><td>${esc(it.desc)}</td></tr>`).join('');
+
+  const componentBlock = data.componentLines.length ? `
+    <div class="pq-section">Component Remove &amp; Replace</div>
+    <p class="pq-note">Flat-rate pricing below covers labor for removal and reinstallation of the components selected for this quote. Parts are billed separately at cost plus standard markup (see Terms).</p>
+    <table class="pq-striped pq-comp-table">
+      <tr><th>Component</th><th>Est. Labor Hours</th><th>Flat Labor Price</th></tr>
+      ${data.componentLines.map(l=>`<tr><td>${esc(l.label)}</td><td>${esc(l.hours)}</td><td>${esc(l.price)}</td></tr>`).join('')}
+    </table>` : '';
+
+  const termsList = data.terms.map(t=>`<li>${esc(t)}</li>`).join('');
+
+  return `
+    <div class="pq-header">
+      <div>
+        <p class="pq-shop-name">${esc(data.shopName||'Your Shop Name')}</p>
+        <p class="pq-shop-tagline">${esc(data.preparedBy ? data.preparedBy+' — Certificated Airframe & Powerplant Mechanic' : 'Certificated Airframe & Powerplant Mechanic — Inspection Authorization')}</p>
+      </div>
+      <div class="pq-shop-contact">
+        <div>${esc(data.shopAddress||'')}</div>
+        <div>${esc([data.shopPhone, data.shopEmail].filter(Boolean).join('  |  '))}</div>
+      </div>
+    </div>
+
+    <div class="pq-title-row">
+      <div>
+        <p class="pq-title">Price Quote</p>
+        <p class="pq-subtitle">Annual Inspection — ${esc(data.makeModel||'Aircraft')}</p>
+      </div>
+      <div class="pq-quote-meta">
+        <div><b>Quote Date:</b> ${esc(data.date)}</div>
+        <div><b>Valid Through:</b> ${esc(data.validThru)}</div>
+      </div>
+    </div>
+
+    <div class="pq-section">Aircraft &amp; Customer Information</div>
+    <table class="pq-info-table">
+      ${infoRow('MAKE / MODEL', data.makeModel, 'REGISTRATION', data.registration)}
+      ${infoRow('SERIAL NUMBER', data.serialNumber, 'TOTAL TIME', data.totalTime)}
+      ${infoRow('CUSTOMER', data.customerName, 'PHONE', data.customerPhone)}
+      ${infoRow('ADDRESS', data.customerAddress, 'EMAIL', data.customerEmail)}
+      ${infoRow('PREPARED BY', data.preparedBy, 'QUOTE NO.', data.quoteNo)}
+    </table>
+
+    <div class="pq-section">Inspection Labor &amp; Scope</div>
+    <p class="pq-note">This annual inspection is billed at an hourly labor rate, with estimated hours shown below based on the aircraft configuration selected. Final invoice reflects actual hours worked; any additional discrepancies found during inspection are quoted separately per the policy below.</p>
+    <table class="pq-rate-table">
+      <tr><th>Aircraft Category</th><th>Inspection Type</th><th>Labor Rate</th><th>Est. Hours</th><th>Estimated Labor Total</th></tr>
+      <tr><td>${esc(data.aircraftCategory)}</td><td>Annual Inspection</td><td>${esc(data.rateStr)}</td><td>${esc(data.annualHoursStr)}</td><td><b>${esc(data.laborTotalStr)}</b></td></tr>
+    </table>
+    <table class="pq-striped">
+      <tr><th>Item</th><th>Description of Work</th></tr>
+      ${scopeRows}
+    </table>
+    ${componentBlock}
+
+    <div class="pq-section">Quotation Summary</div>
+    <table class="pq-summary-table">
+      <tr><td>Total Labor Hours</td><td>${esc(data.totalHoursStr)}</td></tr>
+      <tr><td>Labor Rate</td><td>${esc(data.rateStr)}</td></tr>
+      <tr><td>Labor Subtotal</td><td>${esc(data.laborSubtotalStr)}</td></tr>
+      <tr><td>Parts / Materials</td><td>${esc(data.partsStr)}</td></tr>
+      <tr><td class="pq-total">TOTAL QUOTED PRICE</td><td class="pq-total">${esc(data.totalPrice)}</td></tr>
+    </table>
+
+    <div class="pq-section">Schedule</div>
+    <table class="pq-schedule-table">
+      <tr><td class="pq-label">Estimated Downtime</td><td>${esc(data.downtime)}</td></tr>
+      <tr><td class="pq-label">Scheduled Start</td><td>${esc(data.scheduledStart)}</td></tr>
+    </table>
+
+    <div class="pq-section">Discrepancy &amp; Squawk Repair Policy</div>
+    <p class="pq-note">This quote covers the base inspection only. Any airworthiness discrepancies discovered during the inspection will be documented and reviewed with the owner before further work begins. Repair of discrepancies is billed separately at the hourly labor rate above, plus parts. No repair work beyond the inspection scope will be performed without owner authorization.</p>
+
+    <div class="pq-section">Terms &amp; Payment Policy</div>
+    <ul class="pq-terms">${termsList}</ul>
+
+    <div class="pq-footer">Quote valid for 30 days from the date shown above. Thank you for trusting your aircraft's airworthiness to our shop.</div>
+  `;
+}
+
+function printQuote(){
+  const data = gatherQuoteData();
+  document.getElementById('print-quote').innerHTML = buildPrintQuoteHtml(data);
+  window.print();
+}
+
+function downloadQuoteDocx(){
+  const today = new Date();
+  const data = gatherQuoteData();
+
+  const docXml = _buildDocumentXml(data);
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+</Types>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`;
+  const core = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Maintenance Quotation</dc:title></cp:coreProperties>`;
+  const app = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Flat Rate Quote Builder</Application></Properties>`;
+
+  const files = [
+    {name:'[Content_Types].xml', data: _strToBytes(contentTypes)},
+    {name:'_rels/.rels', data: _strToBytes(rels)},
+    {name:'docProps/core.xml', data: _strToBytes(core)},
+    {name:'docProps/app.xml', data: _strToBytes(app)},
+    {name:'word/document.xml', data: _strToBytes(docXml)},
+  ];
+  const zipBytes = _buildZip(files);
+  const blob = new Blob([zipBytes], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const tail = (document.getElementById('f-tail').value||'Quote').replace(/[^a-z0-9]+/gi,'_');
+  a.href = url;
+  a.download = `Quote_${tail}_${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
