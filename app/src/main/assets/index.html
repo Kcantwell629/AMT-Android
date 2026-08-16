@@ -374,15 +374,30 @@
 
   /* Component R&R quote list */
   .comp-row{
-    display:grid;
-    grid-template-columns: 1fr auto auto auto auto;
-    gap:12px;
+    display:flex;
+    flex-wrap:wrap;
     align-items:center;
+    gap:10px 12px;
     padding:10px 0;
     border-bottom:1px solid var(--line);
   }
   .comp-row:last-child{border-bottom:none;}
+  /* Every direct child keeps its natural size and wraps onto a new line
+     instead of shrinking/overflowing; the first child (the main type
+     select, or a plain label div on fixed-price rows) grows to fill
+     whatever room is left, matching the old grid's "1fr auto auto..."
+     look on wide screens while staying inside the card on narrow ones. */
+  .comp-row > *{
+    flex:0 0 auto;
+    max-width:100%;
+  }
+  .comp-row > select:first-child,
+  .comp-row > div:first-child{
+    flex:1 1 220px;
+    min-width:160px;
+  }
   .comp-row select, .comp-row input[type=number]{
+    max-width:100%;
     padding:7px 8px;
     border:1.5px solid var(--line);
     border-radius:7px;
