@@ -436,6 +436,21 @@
     border-bottom:1px solid var(--line);
   }
   .qtable td.num{text-align:right; font-variant-numeric:tabular-nums;}
+  .qtable-add-row td{background:var(--paper);}
+  .qtable-add-row input[type=text]{
+    width:100%;
+    padding:7px 8px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+  }
+  .qtable-add-row select{
+    padding:7px 8px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+    background:#fff;
+  }
   .rm-btn{
     background:none;
     border:none;
@@ -626,7 +641,7 @@
 
       <div class="card">
         <h2>Included In Every Annual</h2>
-        <div class="fixed-line"><div>AD Research <span class="tag">ALWAYS INCLUDED</span></div><span class="hr-group"><select class="hr-select" id="f-ad-hrs"></select><span class="hr-unit">hrs</span></span></div>
+        <div class="fixed-line"><div>AD Research <span class="tag">ALWAYS INCLUDED</span></div><span class="hr-group"><select class="hr-select" id="f-ad-hrs"></select><span class="hr-unit">hr</span></span></div>
         <div class="fixed-line" style="margin-top:8px;"><div>Aircraft Wash <span class="tag">ALWAYS INCLUDED</span></div><span class="hr-group"><select class="hr-select" id="f-wash-hrs"></select><span class="hr-unit">hr</span></span></div>
         <p class="note">
           * Does not include discrepancies found during the inspection.<br>
@@ -716,7 +731,14 @@
       <div class="card">
         <h2>Component Quote Items</h2>
         <table class="qtable" id="comp-table">
-          <thead><tr><th>Item</th><th style="text-align:right">Hours</th><th style="text-align:right">Est. $</th><th></th></tr></thead>
+          <thead>
+            <tr><th>Item</th><th style="text-align:right">Hours</th><th style="text-align:right">Est. $</th><th></th></tr>
+            <tr class="qtable-add-row">
+              <td><input type="text" id="c-custom-item" placeholder="Custom item description"></td>
+              <td style="text-align:right"><select id="c-custom-hrs"></select></td>
+              <td colspan="2" style="text-align:right"><button class="add-btn" onclick="addCustomItem()">+ Add to Quote</button></td>
+            </tr>
+          </thead>
           <tbody id="comp-tbody"></tbody>
         </table>
         <div id="comp-empty" class="empty-msg">No components added yet.</div>
@@ -1140,6 +1162,7 @@ function initComponentHourSelects(){
   fillHourOptions('c-alt-hrs', 9);
   fillHourOptions('c-oil-hrs', 9);
   fillHourOptions('c-mount-hrs', 25);
+  fillHourOptions('c-custom-hrs', 25, 0);
 
   setHourDefault('c-prop-hrs', parseFloat(document.getElementById('c-prop-type').value), 9);
   updateCylHoursDefault();
@@ -1147,6 +1170,7 @@ function initComponentHourSelects(){
   setHourDefault('c-alt-hrs', parseFloat(document.getElementById('c-alt-type').value), 9);
   setHourDefault('c-oil-hrs', 4, 9);
   setHourDefault('c-mount-hrs', 25, 25);
+  document.getElementById('c-custom-hrs').value = '1';
 
   document.getElementById('c-prop-type').addEventListener('change', e=>{
     setHourDefault('c-prop-hrs', parseFloat(e.target.value), 9);
@@ -1200,6 +1224,15 @@ function addComponent(selectId, mapper, hoursId){
 function addFixed(label, hoursId){
   const hours = parseFloat(document.getElementById(hoursId).value);
   componentItems.push({label, hours});
+  renderAll();
+}
+function addCustomItem(){
+  const itemEl = document.getElementById('c-custom-item');
+  const label = itemEl.value.trim();
+  if(!label){ itemEl.focus(); return; }
+  const hours = parseFloat(document.getElementById('c-custom-hrs').value);
+  componentItems.push({label, hours});
+  itemEl.value = '';
   renderAll();
 }
 function addCylinder(){
@@ -1275,11 +1308,16 @@ function resetAll(){
   state.adHrs = 8; state.washHrs = 1;
   syncAnnualFixedHourSelects();
   componentItems.length = 0;
+  document.getElementById('c-custom-item').value = '';
+  document.getElementById('c-custom-hrs').value = '1';
   renderAll();
 }
 
 initComponentHourSelects();
 initAnnualFixedHourSelects();
+document.getElementById('c-custom-item').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addCustomItem(); }
+});
 renderAll();
 renderChecklist();
 
