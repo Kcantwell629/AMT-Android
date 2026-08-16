@@ -59,30 +59,27 @@
     margin:0 auto;
     padding:24px 20px 60px;
   }
-  .tabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:18px;
-  }
-  .tab-btn{
-    flex:1;
-    padding:12px 16px;
-    border:2px solid var(--orange);
-    background:#fff;
-    color:var(--orange-dark);
-    font-weight:700;
-    font-size:14.5px;
-    border-radius:10px;
-    cursor:pointer;
-    transition:all .15s;
-  }
-  .tab-btn.active{
-    background:linear-gradient(135deg, var(--orange), var(--orange-dark));
-    color:#fff;
-    box-shadow:var(--shadow);
-  }
   .panel{display:none;}
   .panel.active{display:block;}
+  .home-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#fff;
+    border:2px solid var(--orange);
+    color:var(--orange-dark);
+    font-weight:700;
+    font-size:13.5px;
+    padding:9px 18px;
+    border-radius:20px;
+    cursor:pointer;
+    margin-bottom:16px;
+    transition:all .15s;
+  }
+  .home-btn:hover{
+    background:linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color:#fff;
+  }
 
   /* ---- Home screen: three launcher cards ---- */
   .home-intro{
@@ -570,14 +567,6 @@
 
 <div class="wrap">
   <div>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="home">Home</button>
-      <button class="tab-btn" data-tab="annual">Annual Inspection</button>
-      <button class="tab-btn" data-tab="component">Component R&amp;R</button>
-      <button class="tab-btn" data-tab="checklist">Inspection Checklist</button>
-      <button class="tab-btn" data-tab="quote">Quote Details</button>
-    </div>
-
     <!-- ============ HOME PANEL ============ -->
     <div class="panel active" id="panel-home">
       <div class="home-intro">
@@ -622,6 +611,7 @@
 
     <!-- ============ ANNUAL INSPECTION PANEL ============ -->
     <div class="panel" id="panel-annual">
+      <button class="home-btn" onclick="activateTab('home')">&larr; Home</button>
 
       <div class="card">
         <h2>Propeller</h2>
@@ -668,6 +658,7 @@
 
     <!-- ============ COMPONENT R&R PANEL ============ -->
     <div class="panel" id="panel-component">
+      <button class="home-btn" onclick="activateTab('home')">&larr; Home</button>
 
       <div class="card">
         <h2>Propeller Assembly R&amp;R</h2>
@@ -763,6 +754,7 @@
 
     <!-- ============ INSPECTION CHECKLIST PANEL ============ -->
     <div class="panel" id="panel-checklist">
+      <button class="home-btn" onclick="activateTab('home')">&larr; Home</button>
       <div class="card">
         <h2>Inspection Checklist <span class="badge">14 CFR Part 43, Appendix D</span></h2>
         <p class="note">Scope and detail of items to be included in annual and 100-hour inspections (as applicable to the particular aircraft). Click "Inspected" to mark an item complete; click again to clear it.</p>
@@ -773,12 +765,13 @@
         <div id="checklist-list"></div>
         <button class="reset-btn" onclick="resetChecklist()">Reset Checklist</button>
         <button class="text-update-btn" onclick="sendCustomerUpdate()">Text Update to Customer Phone</button>
-        <p class="note">Opens your device's messaging app pre-addressed to the Customer Phone number (Quote Details tab) with the current progress filled in — you review and tap Send.</p>
+        <p class="note">Opens your device's messaging app pre-addressed to the Customer Phone number (Quote Details panel) with the current progress filled in — you review and tap Send.</p>
       </div>
     </div>
 
     <!-- ============ QUOTE DETAILS PANEL ============ -->
     <div class="panel" id="panel-quote">
+      <button class="home-btn" onclick="activateTab('home')">&larr; Home</button>
       <div class="quote-details-grid">
         <div class="card">
           <h2>Shop Information</h2>
@@ -1303,14 +1296,13 @@ function renderAll(){
   document.getElementById('t-days').textContent = `Est. ${annual.days.toFixed(2)} shop days (annual only)`;
 }
 
-/* ---------------- Tabs ---------------- */
+/* ---------------- Panel navigation ---------------- */
+// Called by the home screen's "Get Started" buttons and each panel's
+// "Home" button (the top tab bar was removed; the home cards are now
+// the only way to switch sections).
 function activateTab(tab){
-  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=> p.classList.toggle('active', p.id==='panel-'+tab));
 }
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=> activateTab(btn.dataset.tab));
-});
 
 document.getElementById('f-rate').addEventListener('input', renderAll);
 document.getElementById('f-parts').addEventListener('input', renderAll);
