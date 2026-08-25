@@ -19,7 +19,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 
 /**
- * Thin native wrapper around the Flat Rate Quote Builder web app
+ * Thin native wrapper around the AMT (Aircraft Maintenance Tracker) web app
  * (app/src/main/assets/index.html — a byte-for-byte copy of the app
  * at https://github.com/Kcantwell629/flat-rate-quote-builder).
  *
