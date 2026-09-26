@@ -26,7 +26,7 @@ import androidx.activity.OnBackPressedCallback
  * All pricing logic, the checklist, and the .docx generator live in that
  * HTML/JS file unmodified. This activity only bridges three things the
  * web app does that a plain WebView can't do on its own:
- *   1. sms: / tel: / mailto: links -> hand off to a real system app.
+ *   1. sms: / tel: / mailto: / market: links -> hand off to a real system app.
  *   2. Blob-based file downloads (the "Download Quote (.docx)" button)
  *      -> saved into the device's Downloads folder.
  *   3. window.print() (the "Print / Save Quote (PDF)" button)
@@ -42,6 +42,10 @@ class MainActivity : ComponentActivity() {
 
         webView = WebView(this)
         setContentView(webView)
+
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
@@ -130,7 +134,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private val EXTERNAL_SCHEMES = setOf("sms", "tel", "mailto")
+        private val EXTERNAL_SCHEMES = setOf("sms", "tel", "mailto", "market")
 
         // Installed once per page load. Intercepts the two browser APIs the
         // web app relies on that a bare WebView doesn't implement:

@@ -881,6 +881,12 @@
         <button class="reset-btn" onclick="clearSettings()">Clear Saved Settings</button>
         <div class="settings-msg" id="settings-msg"></div>
       </div>
+
+      <div class="card">
+        <h2>Enjoying AMT?</h2>
+        <p class="note" style="margin-top:0; margin-bottom:14px;">A quick rating on the Play Store helps other mechanics find the app.</p>
+        <button class="print-btn" onclick="rateApp()">&#9733; Rate this App</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1449,6 +1455,22 @@ function loadSettings(){
 }
 
 loadSettings();
+
+/* ---------------- Rate this App (deep-links to the Play Store listing) ---------------- */
+
+const PLAY_STORE_PACKAGE = 'com.amtandroid.quotebuilder';
+
+function rateApp(){
+  if(window.AndroidBridge){
+    // Inside the Android app: hand off to the native bridge so the OS opens
+    // the Play Store app directly (see MainActivity's "market" scheme handoff).
+    window.location.href = `market://details?id=${PLAY_STORE_PACKAGE}`;
+  } else {
+    // Plain web context (no Android wrapper): open the Play Store listing
+    // in a new tab instead of navigating away from the app.
+    window.open(`https://play.google.com/store/apps/details?id=${PLAY_STORE_PACKAGE}`, '_blank');
+  }
+}
 
 /* =========================================================================
    DOCX QUOTE GENERATOR
