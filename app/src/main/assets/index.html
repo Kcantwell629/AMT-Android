@@ -54,6 +54,28 @@
     font-size:13px;
     color:#fff0d9;
   }
+  .settings-btn{
+    margin-left:auto;
+    flex:none;
+    width:40px;
+    height:40px;
+    border:none;
+    border-radius:50%;
+    background:rgba(255,255,255,0.16);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background .15s, transform .15s;
+  }
+  .settings-btn:hover{
+    background:rgba(255,255,255,0.28);
+    transform:rotate(30deg);
+  }
+  .settings-btn svg{
+    width:22px;
+    height:22px;
+  }
   .wrap{
     max-width:1180px;
     margin:0 auto;
@@ -356,6 +378,13 @@
     box-shadow:var(--shadow);
   }
   .print-btn:hover{filter:brightness(1.05);}
+  .settings-msg{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--good);
+    margin-top:10px;
+    min-height:16px;
+  }
   .reset-btn{
     width:100%;
     margin-top:8px;
@@ -563,6 +592,9 @@
     <h1>AMT</h1>
     <p>Aircraft Maintenance Tracker &mdash; Annual inspection &amp; component R&amp;R pricing for general aviation aircraft</p>
   </div>
+  <button class="settings-btn" onclick="activateTab('settings')" title="Settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="#fff"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+  </button>
 </header>
 
 <div class="wrap">
@@ -826,6 +858,28 @@
           <button class="print-btn" style="background:linear-gradient(135deg, var(--yellow), var(--orange));" onclick="printQuote()">Print / Save Quote (PDF)</button>
           <button class="reset-btn" onclick="resetAll()">Reset All Selections</button>
         </div>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS PANEL ============ -->
+    <div class="panel" id="panel-settings">
+      <button class="home-btn" onclick="activateTab('home')">&larr; Home</button>
+
+      <div class="card">
+        <h2>Shop Defaults</h2>
+        <p class="note" style="margin-top:0; margin-bottom:14px;">Saved on this device and used to pre-fill Shop Information &amp; the labor rate on new quotes, so you don't have to retype them every time.</p>
+        <div class="field-row"><label>Shop Name</label><input type="text" id="s-shop-name" placeholder="Ken's Aircraft Maintenance, LLC"></div>
+        <div class="field-row"><label>Address</label><input type="text" id="s-shop-address" placeholder="123 Airport Rd, Springfield, IL"></div>
+        <div class="field-row"><label>Phone</label><input type="text" id="s-shop-phone" placeholder="(555) 123-4567"></div>
+        <div class="field-row"><label>Email</label><input type="text" id="s-shop-email" placeholder="shop@example.com"></div>
+        <div class="field-row"><label>Prepared By (A&amp;P/IA)</label><input type="text" id="s-prepared-by" placeholder="Name, A&P/IA"></div>
+        <div class="rate-row">
+          <label>Default Shop Labor Rate</label>
+          <input type="number" id="s-rate" placeholder="95" min="0" step="1">
+        </div>
+        <button class="print-btn" onclick="saveSettings()">Save Settings</button>
+        <button class="reset-btn" onclick="clearSettings()">Clear Saved Settings</button>
+        <div class="settings-msg" id="settings-msg"></div>
       </div>
     </div>
   </div>
@@ -1327,6 +1381,74 @@ document.getElementById('c-custom-item').addEventListener('keydown', e=>{
 });
 renderAll();
 renderChecklist();
+
+/* ---------------- Settings (shop defaults, saved on this device) ---------------- */
+
+const SETTINGS_KEY = 'amt-shop-settings';
+
+function readSettingsForm(){
+  return {
+    shopName: document.getElementById('s-shop-name').value,
+    shopAddress: document.getElementById('s-shop-address').value,
+    shopPhone: document.getElementById('s-shop-phone').value,
+    shopEmail: document.getElementById('s-shop-email').value,
+    preparedBy: document.getElementById('s-prepared-by').value,
+    rate: document.getElementById('s-rate').value,
+  };
+}
+
+function fillSettingsForm(settings){
+  document.getElementById('s-shop-name').value = settings.shopName || '';
+  document.getElementById('s-shop-address').value = settings.shopAddress || '';
+  document.getElementById('s-shop-phone').value = settings.shopPhone || '';
+  document.getElementById('s-shop-email').value = settings.shopEmail || '';
+  document.getElementById('s-prepared-by').value = settings.preparedBy || '';
+  document.getElementById('s-rate').value = settings.rate || '';
+}
+
+// Applies saved shop defaults into the live Quote Details fields.
+function applySettingsToQuote(settings){
+  if(settings.shopName) document.getElementById('f-shop-name').value = settings.shopName;
+  if(settings.shopAddress) document.getElementById('f-shop-address').value = settings.shopAddress;
+  if(settings.shopPhone) document.getElementById('f-shop-phone').value = settings.shopPhone;
+  if(settings.shopEmail) document.getElementById('f-shop-email').value = settings.shopEmail;
+  if(settings.preparedBy) document.getElementById('f-prepared-by').value = settings.preparedBy;
+  if(settings.rate) document.getElementById('f-rate').value = settings.rate;
+  renderAll();
+}
+
+function showSettingsMsg(text){
+  const el = document.getElementById('settings-msg');
+  el.textContent = text;
+  setTimeout(()=>{ if(el.textContent===text) el.textContent=''; }, 3000);
+}
+
+function saveSettings(){
+  const settings = readSettingsForm();
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  applySettingsToQuote(settings);
+  showSettingsMsg('Settings saved and applied to this quote.');
+}
+
+function clearSettings(){
+  localStorage.removeItem(SETTINGS_KEY);
+  fillSettingsForm({});
+  showSettingsMsg('Saved settings cleared.');
+}
+
+function loadSettings(){
+  const raw = localStorage.getItem(SETTINGS_KEY);
+  if(!raw) return;
+  try{
+    const settings = JSON.parse(raw);
+    fillSettingsForm(settings);
+    applySettingsToQuote(settings);
+  }catch(e){
+    // Ignore malformed saved settings rather than breaking app startup.
+  }
+}
+
+loadSettings();
 
 /* =========================================================================
    DOCX QUOTE GENERATOR
